@@ -1,0 +1,133 @@
+<?xml version="1.0"?>
+<robot name="mecanum_robot">
+  
+  <!-- Define the base link for the robot -->
+  <link name="base_robot">
+    <visual>
+    <geometry>
+      <box size="0.5 0.5 0.05"/>
+    </geometry>
+  </visual>
+  <collision>
+    <geometry>
+      <box size="0.5 0.5 0.05"/>
+    </geometry>
+  </collision>
+  </link>
+  
+  <!-- Define the four mecanum wheels -->
+  <link name="wheel_front_left">
+    <visual>
+      <geometry>
+        <cylinder length="0.05" radius="0.05"/>
+      </geometry>
+      <material name="green">
+        <color rgba="0.0 0.8 0.0 1.0"/>
+      </material>
+    </visual>
+  </link>
+  <link name="wheel_front_right">
+    <visual>
+      <geometry>
+        <cylinder length="0.05" radius="0.05"/>
+      </geometry>
+      <material name="green">
+        <color rgba="0.0 0.8 0.0 1.0"/>
+      </material>
+    </visual>
+  </link>
+  <link name="wheel_back_left">
+    <visual>
+      <geometry>
+        <cylinder length="0.05" radius="0.05"/>
+      </geometry>
+      <material name="green">
+        <color rgba="0.0 0.8 0.0 1.0"/>
+      </material>
+    </visual>
+  </link>
+  <link name="wheel_back_right">
+    <visual>
+      <geometry>
+        <cylinder length="0.05" radius="0.05"/>
+      </geometry>
+      <material name="green">
+        <color rgba="0.0 0.8 0.0 1.0"/>
+      </material>
+    </visual>
+  </link>
+  
+  <!-- Define the four mecanum wheel joints -->
+  <joint name="joint_front_left" type="continuous">
+    <origin xyz="0.1 0.1 0" rpy="0 0 0"/>
+    <parent link="base_robot"/>
+    <child link="wheel_front_left"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+  <joint name="joint_front_right" type="continuous">
+    <origin xyz="0.1 -0.1 0" rpy="0 0 0"/>
+    <parent link="base_robot"/>
+    <child link="wheel_front_right"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+  <joint name="joint_back_left" type="continuous">
+    <origin xyz="-0.1 0.1 0" rpy="0 0 0"/>
+    <parent link="base_robot"/>
+    <child link="wheel_back_left"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+  <joint name="joint_back_right" type="continuous">
+    <origin xyz="-0.1 -0.1 0" rpy="0 0 0"/>
+    <parent link="base_robot"/>
+    <child link="wheel_back_right"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+  
+  <!-- Define the robot's transmission -->
+  <transmission name="transmission">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="joint_front_left">
+      <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+    </joint>
+    <joint name="joint_front_right">
+      <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+    </joint>
+    <joint name="joint_back_left">
+  <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+</joint>
+<joint name="joint_back_right">
+  <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+</joint>
+<actuator name="front_left_motor">
+  <mechanicalReduction>1</mechanicalReduction>
+  <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+  <joint name="joint_front_left"/>
+</actuator>
+<actuator name="front_right_motor">
+  <mechanicalReduction>1</mechanicalReduction>
+  <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+  <joint name="joint_front_right"/>
+</actuator>
+<actuator name="back_left_motor">
+  <mechanicalReduction>1</mechanicalReduction>
+  <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+  <joint name="joint_back_left"/>
+</actuator>
+<actuator name="back_right_motor">
+  <mechanicalReduction>1</mechanicalReduction>
+  <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+  <joint name="joint_back_right"/>
+</actuator>
+
+ </transmission>
+  <!-- Add the robot's plugin -->
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/mecanum_robot</robotNamespace>
+      <controlPeriod>0.1</controlPeriod>
+      <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+    </plugin>
+  </gazebo>
+</robot>
+
+
