@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ROSbridge WebSocket Map Display</title>
+    <style>
+      /* Increase the font size and line height for better readability */
+      body {
+      font-size: 16px;
+      line-height: 1.5;
+      background-color: #f5f5f5;
+      color: #333;
+      padding: 20px;
+      }
+      /* heading styling */
+      h1, h2, h3 {
+      font-family: 'Roboto', sans-serif;
+      color: #2d2d2d;
+      }
+      /* Adjust the size and position of the map container */
+      #map_container {
+      position: relative;
+      width: 500px;
+      height: 500px;
+      padding: 20px;
+      }
+      /* Use a more modern border style for the map canvas */
+      #map_canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
+      }
+      #scale_legend {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      font-size: 12px;
+      color: white;
+      }
+      /* Use a more readable font for the scale labels */
+      .scale_label {
+      font-family: Arial, sans-serif;
+      font-weight: bold;
+      font-size: 14px;
+      margin-left: 10px;
+      margin-right: 10px;
+      }
+      /* Use a thicker and darker line for the scale */
+      .scale_line {
+      height: 4px;
+      width: 20px;
+      background-color: #333;
+      margin-left: 5px;
+      margin-right: 5px;
+      background-color: white;
+      }
+      #map_controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      }
+      #map_info {
+      font-size: 14px;
+      }
+      #refresh_button {
+      display: inline-block;
+      background-color: #2d2d2d;
+      color: #ffffff;
+      padding: 10px 20px;
+      border-radius: 5px;
+      text-decoration: none;
+      transition: background-color 0.2s ease-in-out;
+      }
+      #refresh_button:hover {
+      background-color: #555555;
+      }
+      #map {
+      position: relative;
+      width: 100%;
+      height: 400px;
+      }
+      #spinner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin-top: -20px; /* half of spinner height */
+      margin-left: -20px; /* half of spinner width */
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 4px solid rgba(0, 0, 0, 0.2);
+      border-top-color: #3498db;
+      animation: spin 1s ease-in-out infinite;
+      }
+      @keyframes spin {
+      to { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>ROSbridge WebSocket Display</h1>
+    <div id="map_container">
+      <canvas id="map_canvas"></canvas>
+      <div id="scale_legend">
+        <div class="scale_label">0</div>
+        <div class="scale_line"></div>
+        <div class="scale_label">50</div>
+        <div class="scale_line"></div>
+        <div class="scale_label">100</div>
+      </div>
+    </div>
+    <button id="refresh_button">Refresh</button>
+    <div id="map_info"></div>
+    <div id="map"></div>
+    <div id="spinner"></div>
+    <script>
+      var ws = new WebSocket("ws://localhost:9090");
+      var spinner = document.getElementById("spinner");
+      
+      ws.onopen = function() {
+        console.log("WebSocket connection established");
+        spinner.style.display = "block"; // show the spinner
+        subscribeToMap();
+      };
+      
+      ws.onmessage = function(event) {
+        var message = JSON.parse(event.data);
+      
+        if (message.op == "publish" && message.topic == "/map") {
+          spinner.style.display = "none"; // hide the spinner
+          var map_data = message.msg.data;
+          var map_width = message.msg.info.width;
+          var map_height = message.msg.info.height;
+          var map_resolution = message.msg.info.resolution;
+      
+          var canvas = document.getElementById("map_canvas");
+          canvas.width = map_width;
+          canvas.height = map_height;
+          var ctx = canvas.getContext("2d");
+      
+          var colorMap = {
+            0: "#ffffff", // white for cells with a value of 0
+            50: "#7f7f7f", // gray for cells with a value of 50
+            100: "#000000" // black for cells with a value of 100
+          };
+      
+          for (var i = 0; i < map_data.length; i++) {
+            var x = i % map_width;
+            var y = Math.floor(i / map_width);
+            var value = map_data[i];
+            var color = colorMap[value];
+      
+            ctx.fillStyle = color || "#000000"; // default to black for unknown values
+            ctx.fillRect(x, y, 1, 1);
+          }
+      
+          var map_info = document.getElementById("map_info");
+          map_info.textContent = "Map size: " + map_width + "x" + map_height + ", resolution: " + map_resolution.toFixed(2) + " m/pixel";
+        }
+      };
+      
+      function subscribeToMap() {
+        var subscribe_msg = {
+          op: "subscribe",
+          topic: "/map",
+          type: "nav_msgs/OccupancyGrid"
+        };
+        ws.send(JSON.stringify(subscribe_msg));
+      }
+      
+       var refresh_button = document.getElementById("refresh_button");
+      refresh_button.addEventListener("click", function() {
+        var canvas = document.getElementById("map_canvas");
+        var ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        subscribeToMap();
+      });
+      
+      refresh_button.addEventListener("click", function() {
+      var canvas = document.getElementById("map_canvas");
+      var ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      spinner.style.display = "block"; // show the spinner
+      subscribeToMap();
+      });
+      
+    </script>
+  </body>
+</html>
